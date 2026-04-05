@@ -8,6 +8,8 @@ import { Download, Heart, Code2, Globe } from "lucide-react";
 // USER PROFILE PAGE — /[username]
 // ═══════════════════════════════════════════════════
 
+// Force dynamic rendering (no static generation at build time)
+export const dynamic = 'force-dynamic';
 // ISR: revalidate every 5 minutes
 export const revalidate = 300;
 

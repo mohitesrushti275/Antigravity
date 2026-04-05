@@ -2,6 +2,9 @@ import Link from "next/link";
 import { Compass } from "lucide-react";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+// Force dynamic rendering (no static generation at build time)
+export const dynamic = 'force-dynamic';
+
 interface CategoryDesign {
   id: string;
   name: string;

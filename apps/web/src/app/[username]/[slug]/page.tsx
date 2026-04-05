@@ -10,6 +10,8 @@ import { CopyButton, LivePreview } from "./client-components";
 // Server component with SSR + metadata
 // ═══════════════════════════════════════════════════
 
+// Force dynamic rendering (no static generation at build time)
+export const dynamic = 'force-dynamic';
 // ISR: revalidate every 5 minutes
 export const revalidate = 300;
 
