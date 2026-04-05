@@ -74,8 +74,8 @@ export default function PublishPage() {
       const { data } = await res.json();
       setComponentId(data.id);
       setStep("upload");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create component');
     } finally {
       setLoading(false);
     }
@@ -135,8 +135,8 @@ export default function PublishPage() {
       if (!confirmRes.ok) throw new Error("Failed to confirm upload");
 
       setStep("done");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setLoading(false);
     }

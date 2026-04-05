@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
-import { User, Key, Eye, EyeOff, Copy, Loader2, AlertCircle, Check, Plus, Trash2 } from "lucide-react";
+import { User, Key, Copy, Loader2, AlertCircle, Check, Plus, Trash2 } from "lucide-react";
 
 // ═══════════════════════════════════════════════════
 // SETTINGS PAGE — /settings

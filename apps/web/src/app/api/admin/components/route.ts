@@ -66,8 +66,9 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ data });
-  } catch (err: any) {
-    const status = err.message === "Unauthorized" ? 401 : err.message === "Forbidden" ? 403 : 500;
-    return NextResponse.json({ error: err.message }, { status });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Internal error';
+    const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

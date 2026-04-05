@@ -174,8 +174,8 @@ export default function AdminComponentsPage() {
       setSuccess("Component created!");
       setModal(null);
       loadComponents();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to create');
     } finally {
       setSaving(false);
     }
@@ -208,8 +208,8 @@ export default function AdminComponentsPage() {
       setSuccess("Component updated!");
       setModal(null);
       loadComponents();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Failed to update');
     } finally {
       setSaving(false);
     }
@@ -285,8 +285,8 @@ export default function AdminComponentsPage() {
       setSuccess(`${uploadFiles.length} file(s) uploaded!`);
       setModal(null);
       loadComponents();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setUploading(false);
       setUploadProgress("");

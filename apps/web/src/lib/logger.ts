@@ -87,13 +87,12 @@ class Logger {
    * Automatically attaches traceId and route to all subsequent log calls.
    */
   child(context: { traceId: string; route: string; method?: string; userId?: string }) {
-    const parent = this;
     return {
-      debug: (msg: string, data?: Record<string, unknown>) => parent.debug(msg, { ...context, metadata: data }),
-      info:  (msg: string, data?: Record<string, unknown>) => parent.info(msg, { ...context, metadata: data }),
-      warn:  (msg: string, data?: Record<string, unknown>) => parent.warn(msg, { ...context, metadata: data }),
-      error: (msg: string, data?: Record<string, unknown>) => parent.error(msg, { ...context, metadata: data }),
-      fatal: (msg: string, data?: Record<string, unknown>) => parent.fatal(msg, { ...context, metadata: data }),
+      debug: (msg: string, data?: Record<string, unknown>) => this.debug(msg, { ...context, metadata: data }),
+      info:  (msg: string, data?: Record<string, unknown>) => this.info(msg, { ...context, metadata: data }),
+      warn:  (msg: string, data?: Record<string, unknown>) => this.warn(msg, { ...context, metadata: data }),
+      error: (msg: string, data?: Record<string, unknown>) => this.error(msg, { ...context, metadata: data }),
+      fatal: (msg: string, data?: Record<string, unknown>) => this.fatal(msg, { ...context, metadata: data }),
     };
   }
 }

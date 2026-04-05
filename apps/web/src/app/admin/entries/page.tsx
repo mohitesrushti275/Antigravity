@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Plus, Edit2, Trash2, Loader2, Eye } from "lucide-react";
+import { Plus, Edit2, Trash2, Loader2 } from "lucide-react";
 import { EntryForm } from "./_components/EntryForm";
 import { NewCategoryModal } from "./_components/NewCategoryModal";
 
@@ -54,17 +54,22 @@ export default function AdminEntriesPage() {
 
   // ─── Load entries for selected category ─────────
   useEffect(() => {
-    if (!selectedCategoryId) {
-      setEntries([]);
-      return;
-    }
+    if (!selectedCategoryId) return;
 
-    setLoadingEntries(true);
-    fetch(`/api/admin/entries?categoryId=${selectedCategoryId}`)
-      .then((r) => r.json())
-      .then((j) => setEntries(j.data ?? []))
-      .catch(() => setEntries([]))
-      .finally(() => setLoadingEntries(false));
+    const loadEntries = async () => {
+      setLoadingEntries(true);
+      try {
+        const res = await fetch(`/api/admin/entries?categoryId=${selectedCategoryId}`);
+        const json = await res.json();
+        setEntries(json.data ?? []);
+      } catch {
+        setEntries([]);
+      } finally {
+        setLoadingEntries(false);
+      }
+    };
+
+    loadEntries();
   }, [selectedCategoryId]);
 
   // ─── Refresh entries ────────────────────────────
@@ -221,7 +226,7 @@ export default function AdminEntriesPage() {
                           <div className="w-12 h-12 flex-shrink-0 bg-accent rounded-lg overflow-hidden border border-border">
                             <img
                               src={entry.image_url}
-                              alt={entry.title}
+                              alt=""
                               className="w-full h-full object-cover"
                             />
                           </div>

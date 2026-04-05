@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, Check, X, Star, Eye, AlertCircle } from "lucide-react";
+import { Loader2, Check, X, Star } from "lucide-react";
 
 // ═══════════════════════════════════════════════════
 // ADMIN REVIEW QUEUE — /admin/queue
