@@ -1,0 +1,20 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/recompute-counts",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/purge-deleted-files",
+      "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/reset-monthly-counts",
+      "schedule": "0 0 1 * *"
+    },
+    {
+      "path": "/api/cron/update-embeddings",
+      "schedule": "0 4 * * *"
+    }
+  ]
+}

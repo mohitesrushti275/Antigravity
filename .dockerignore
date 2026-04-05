@@ -1,0 +1,100 @@
+# ═══════════════════════════════════════════════════
+# Docker Ignore - Files not needed in Docker image
+# ═══════════════════════════════════════════════════
+
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Dependencies (will be installed in container)
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Build outputs (will be built in container)
+.next
+.turbo
+dist
+build
+out
+
+# Environment files (use Docker secrets/env vars)
+.env
+.env.*
+!.env.example
+
+# Documentation
+docs/
+*.md
+!README.md
+LICENSE
+
+# Development files
+scripts/
+*.sh
+.vscode/
+.idea/
+.editorconfig
+
+# Test files
+**/*.test.*
+**/*.spec.*
+__tests__/
+__mocks__/
+coverage/
+test/
+tests/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.circleci/
+
+# Development configs
+.prettierrc*
+.eslintrc*
+eslint.config.*
+jest.config.*
+vitest.config.*
+playwright.config.*
+tsconfig.test.json
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Local development
+.local/
+.vercel/
+.netlify/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.backup
+*.bak
+*.old
+
+# Misc
+TODO.md
+CHANGELOG.md
+CONTRIBUTING.md
+.nvmrc
+.npmrc
+.yarnrc

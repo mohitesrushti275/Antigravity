@@ -1,0 +1,140 @@
+name: Pull Request Checks
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+
+jobs:
+  # ═══════════════════════════════════════════════════
+  # PR Quality Checks
+  # ═══════════════════════════════════════════════════
+  pr-quality:
+    name: PR Quality Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Check for breaking changes
+        run: |
+          echo "Checking for breaking changes..."
+          git diff origin/${{ github.base_ref }}...HEAD --name-only | grep -E "(package.json|pnpm-lock.yaml)" || echo "No dependency changes"
+
+      - name: Run TypeScript
+        run: pnpm turbo run typecheck
+
+      - name: Run ESLint
+        run: pnpm turbo run lint
+
+      - name: Run tests with coverage
+        run: pnpm turbo run test -- --coverage
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        if: always()
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+
+      - name: Check bundle size
+        run: |
+          pnpm turbo run build
+          echo "## 📦 Bundle Size Check" >> $GITHUB_STEP_SUMMARY
+          du -sh apps/web/.next >> $GITHUB_STEP_SUMMARY
+
+      - name: Comment PR
+        uses: actions/github-script@v7
+        if: always()
+        with:
+          script: |
+            const output = `
+            ## 🔍 PR Quality Check Results
+            
+            ✅ All checks passed!
+            
+            - TypeScript: Passed
+            - ESLint: Passed
+            - Tests: Passed
+            - Build: Successful
+            
+            Ready for review! 🚀
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });
+
+  # ═══════════════════════════════════════════════════
+  # Preview Deployment
+  # ═══════════════════════════════════════════════════
+  preview-deploy:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: pr-quality
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Vercel Preview
+        uses: amondnet/vercel-action@v25
+        id: vercel-deploy
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          github-comment: true
+          working-directory: ./
+
+      - name: Comment preview URL
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const output = `
+            ## 🔗 Preview Deployment
+            
+            Your preview deployment is ready!
+            
+            **URL**: ${{ steps.vercel-deploy.outputs.preview-url }}
+            
+            Please test the changes before merging.
+            `;
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            });

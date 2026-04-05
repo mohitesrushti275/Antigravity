@@ -1,0 +1,102 @@
+# ═══════════════════════════════════════════════════
+# Vercel Ignore - Files not needed in production
+# ═══════════════════════════════════════════════════
+
+# Documentation (not needed in production)
+docs/
+*.md
+!README.md
+LICENSE
+
+# Development scripts
+scripts/
+*.sh
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.test.js
+**/*.test.jsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.spec.js
+**/*.spec.jsx
+__tests__/
+__mocks__/
+test/
+tests/
+coverage/
+
+# Development configs
+.vscode/
+.idea/
+.editorconfig
+.prettierrc*
+.eslintrc*
+eslint.config.*
+.stylelintrc*
+tsconfig.test.json
+jest.config.*
+vitest.config.*
+playwright.config.*
+
+# CI/CD (not needed in production)
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+azure-pipelines.yml
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+
+# Environment examples
+.env.example
+.env.sample
+.env.template
+
+# Development dependencies
+.husky/
+.commitlintrc*
+.lintstagedrc*
+
+# Misc development files
+TODO.md
+CHANGELOG.md
+CONTRIBUTING.md
+.nvmrc
+.node-version
+.npmrc
+.yarnrc
+.pnpmfile.cjs
+
+# Backup files
+*.backup
+*.bak
+*.old
+*~
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Local development
+.local/
+.vercel/
+
+# Database files (use remote DB in production)
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# OS files
+.DS_Store
+Thumbs.db

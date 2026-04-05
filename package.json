@@ -1,0 +1,25 @@
+{
+  "name": "21st-dev",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean",
+    "validate-env": "tsx scripts/validate-env.ts",
+    "validate-cicd": "bash scripts/validate-cicd.sh",
+    "setup-admin": "npx -y tsx scripts/setup-admin.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.0",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@clerk/nextjs": "^7.0.8",
+    "@sentry/nextjs": "^10.47.0"
+  }
+}

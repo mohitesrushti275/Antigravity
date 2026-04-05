@@ -1,47 +1,144 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Dependencies
+node_modules
+.pnpm-store
+.yarn
+.npm
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Build outputs
+.next
+.turbo
+out
+dist
+build
+*.tsbuildinfo
 
-# testing
-/coverage
+# Environment files (NEVER commit these!)
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+*.env
 
-# next.js
-/.next/
-/out/
+# IDE & Editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*.swn
+.project
+.classpath
+.settings/
+*.sublime-project
+*.sublime-workspace
 
-# production
-/build
-
-# misc
+# OS files
 .DS_Store
-*.pem
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
-# debug
+# Debug & Logs
+*.log
 npm-debug.log*
+pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+lerna-debug.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# Testing
+coverage
+*.lcov
+.nyc_output
+.jest-cache
+test-results/
+playwright-report/
+playwright/.cache/
 
-# vercel
+# Temporary files
+*.tmp
+*.temp
+.cache
+.parcel-cache
+.eslintcache
+.stylelintcache
+
+# Local development
+.local
+*.local
 .vercel
+.netlify
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# Database
+*.db
+*.db-journal
+*.sqlite
+*.sqlite3
+dev.db
+prisma/dev.db
 
-# legacy and alternate workspaces
-/legacy/
-/ai-component-marketplace/
+# Supabase local
+supabase/.branches
+supabase/.temp
+supabase/functions/.vscode
 
-/src/generated/prisma
+# Sentry
+.env.sentry-build-plugin
+.sentryclirc
+
+# Uploads & User content (development only)
+public/uploads/*
+!public/uploads/.gitkeep
+uploads/
+temp-uploads/
+
+# Documentation drafts (keep published docs)
+docs/drafts/
+docs/*.draft.md
+docs/WIP-*.md
+
+# Scripts output
+scripts/output/
+scripts/logs/
+scripts/*.log
+
+# Backup files
+*.backup
+*.bak
+*.old
+*~
+
+# Package manager locks (keep only one)
+# Uncomment the ones you DON'T use:
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml
+
+# Security & Secrets
+*.pem
+*.key
+*.cert
+*.crt
+secrets/
+.secrets
+credentials.json
+service-account.json
+
+# CI/CD artifacts
+.github/workflows/*.log
+.github/workflows/output/
+
+# Misc
+*.sw?
+.misc
+scratch/
+TODO.local.md
+NOTES.local.md

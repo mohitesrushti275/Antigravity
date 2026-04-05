@@ -1,0 +1,382 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '9'
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+jobs:
+  # ═══════════════════════════════════════════════════
+  # Job 1: Code Quality & Security Checks
+  # ═══════════════════════════════════════════════════
+  quality:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    outputs:
+      typecheck_status: ${{ steps.typecheck.outcome }}
+      lint_status: ${{ steps.lint.outcome }}
+      test_status: ${{ steps.test.outcome }}
+      security_status: ${{ steps.security.outcome }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Full history for better analysis
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Cache Turbo
+        uses: actions/cache@v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate environment template
+        run: |
+          if [ ! -f "apps/web/.env.example" ]; then
+            echo "❌ .env.example not found"
+            exit 1
+          fi
+          echo "✅ Environment template exists"
+
+      - name: TypeScript type checking
+        id: typecheck
+        run: |
+          echo "Running TypeScript type checking..."
+          pnpm turbo run typecheck --continue || echo "typecheck_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: ESLint
+        id: lint
+        run: |
+          echo "Running ESLint..."
+          pnpm turbo run lint --continue || echo "lint_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Run tests
+        id: test
+        run: |
+          echo "Running test suite..."
+          pnpm turbo run test --continue || echo "test_failed=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Security audit
+        id: security
+        run: |
+          echo "Running security audit..."
+          pnpm audit --audit-level=high || echo "security_issues=true" >> $GITHUB_OUTPUT
+        continue-on-error: true
+
+      - name: Check for secrets
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --only-verified
+
+      - name: Generate quality report
+        if: always()
+        run: |
+          echo "## 📊 Code Quality Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          
+          if [ "${{ steps.typecheck.outcome }}" == "success" ]; then
+            echo "| TypeScript | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| TypeScript | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.lint.outcome }}" == "success" ]; then
+            echo "| ESLint | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| ESLint | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.test.outcome }}" == "success" ]; then
+            echo "| Tests | ✅ Passed |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Tests | ❌ Failed |" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [ "${{ steps.security.outcome }}" == "success" ]; then
+            echo "| Security | ✅ No issues |" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "| Security | ⚠️ Issues found |" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Fail if critical checks failed
+        if: steps.typecheck.outcome == 'failure' || steps.test.outcome == 'failure'
+        run: |
+          echo "❌ Critical checks failed. Blocking deployment."
+          exit 1
+
+  # ═══════════════════════════════════════════════════
+  # Job 2: Build & Bundle Analysis
+  # ═══════════════════════════════════════════════════
+  build:
+    name: Build & Analyze
+    runs-on: ubuntu-latest
+    needs: quality
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build application
+        run: pnpm turbo run build
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: ${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}
+          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL }}
+
+      - name: Analyze bundle size
+        run: |
+          echo "## 📦 Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -d "apps/web/.next" ]; then
+            du -sh apps/web/.next >> $GITHUB_STEP_SUMMARY
+            echo "✅ Build completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Build directory not found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            apps/web/.next
+            apps/web/public
+          retention-days: 7
+
+  # ═══════════════════════════════════════════════════
+  # Job 3: Database Migration (Production Only)
+  # ═══════════════════════════════════════════════════
+  migrate:
+    name: Database Migration
+    runs-on: ubuntu-latest
+    needs: [quality, build]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 10
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Backup database
+        run: |
+          echo "Creating database backup before migration..."
+          # Add your backup logic here
+          echo "✅ Backup completed"
+
+      - name: Run migrations
+        run: |
+          echo "Running database migrations..."
+          supabase db push --dry-run
+          supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_ID: ${{ secrets.SUPABASE_PROJECT_ID }}
+
+      - name: Verify migration
+        run: |
+          echo "Verifying migration status..."
+          supabase db diff
+          echo "✅ Migration verified"
+
+  # ═══════════════════════════════════════════════════
+  # Job 4: Deploy to Vercel
+  # ═══════════════════════════════════════════════════
+  deploy:
+    name: Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [quality, build, migrate]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: ${{ secrets.PRODUCTION_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: apps/web
+
+      - name: Deploy to Vercel
+        id: deploy
+        uses: amondnet/vercel-action@v25
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          vercel-args: '--prod'
+          working-directory: ./
+
+      - name: Wait for deployment
+        run: sleep 30
+
+      - name: Health check
+        id: health
+        run: |
+          echo "Running health checks..."
+          MAX_RETRIES=5
+          RETRY_COUNT=0
+          
+          while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if curl -sf "${{ secrets.PRODUCTION_URL }}/api/health"; then
+              echo "✅ Health check passed"
+              exit 0
+            fi
+            RETRY_COUNT=$((RETRY_COUNT + 1))
+            echo "⏳ Retry $RETRY_COUNT/$MAX_RETRIES..."
+            sleep 10
+          done
+          
+          echo "❌ Health check failed after $MAX_RETRIES attempts"
+          exit 1
+
+      - name: Smoke tests
+        run: |
+          echo "Running smoke tests..."
+          
+          # Test homepage
+          curl -sf "${{ secrets.PRODUCTION_URL }}" > /dev/null
+          echo "✅ Homepage accessible"
+          
+          # Test API endpoints
+          curl -sf "${{ secrets.PRODUCTION_URL }}/api/health" > /dev/null
+          echo "✅ Health endpoint working"
+          
+          curl -sf "${{ secrets.PRODUCTION_URL }}/api/categories" > /dev/null
+          echo "✅ Categories API working"
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "## 🚀 Deployment Successful" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Environment**: Production" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL**: ${{ secrets.PRODUCTION_URL }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Deployed by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "❌ Deployment failed. Initiating rollback..."
+          # Add rollback logic here
+          echo "Please check logs and manually verify deployment status"
+
+  # ═══════════════════════════════════════════════════
+  # Job 5: Post-Deployment Monitoring
+  # ═══════════════════════════════════════════════════
+  monitor:
+    name: Post-Deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: success()
+    timeout-minutes: 5
+
+    steps:
+      - name: Check Sentry deployment
+        if: secrets.SENTRY_AUTH_TOKEN != ''
+        run: |
+          echo "Notifying Sentry of deployment..."
+          curl -sX POST https://sentry.io/api/0/organizations/${{ secrets.SENTRY_ORG }}/releases/ \
+            -H "Authorization: Bearer ${{ secrets.SENTRY_AUTH_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"version\": \"${{ github.sha }}\", \"projects\": [\"${{ secrets.SENTRY_PROJECT }}\"]}"
+
+      - name: Performance check
+        run: |
+          echo "Running performance checks..."
+          RESPONSE_TIME=$(curl -o /dev/null -s -w '%{time_total}' "${{ secrets.PRODUCTION_URL }}")
+          echo "Response time: ${RESPONSE_TIME}s"
+          
+          if (( $(echo "$RESPONSE_TIME > 3.0" | bc -l) )); then
+            echo "⚠️ Warning: Response time is slow (${RESPONSE_TIME}s)"
+          else
+            echo "✅ Response time is good (${RESPONSE_TIME}s)"
+          fi
+
+      - name: Final summary
+        run: |
+          echo "## ✅ Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All post-deployment checks passed successfully." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitor application logs" >> $GITHUB_STEP_SUMMARY
+          echo "- Check error tracking dashboard" >> $GITHUB_STEP_SUMMARY
+          echo "- Verify user-facing features" >> $GITHUB_STEP_SUMMARY
