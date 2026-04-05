@@ -24,28 +24,26 @@ In the project configuration screen, set the following **EXACTLY**:
 - Click **Save**
 
 ### Build & Development Settings
-Click **Override** and set:
+**IMPORTANT**: Leave these as default (don't override) OR set exactly as follows:
 
 **Build Command:**
+Leave empty (Vercel will auto-detect) OR use:
 ```bash
-cd ../.. && turbo run build --filter=@21st/web
+cd ../.. && turbo run build --filter=@21st/web && cd apps/web
 ```
-(This runs from repo root to ensure workspace dependencies are built)
+(The final `cd apps/web` ensures Vercel looks for output in the right place)
 
 **Output Directory:**
-```
-.next
-```
+Leave as `.next` (default for Next.js)
 
 **Install Command:**
+Leave empty (Vercel will auto-detect pnpm) OR use:
 ```bash
 pnpm install
 ```
 
 **Development Command:**
-```bash
-pnpm run dev
-```
+Leave as default
 
 ### Node.js Version
 - Set to: **20.x**
@@ -104,11 +102,14 @@ This error occurs when Vercel doesn't recognize the monorepo structure.
 6. Click **Save**
 7. Go to **Settings** → **Build & Development Settings**
 8. Click **Override** on Build Command
-9. Set Build Command to: `cd ../.. && turbo run build --filter=@21st/web`
-10. Set Output Directory to: `.next`
-11. Set Install Command to: `pnpm install`
+9. Set Build Command to: `cd ../.. && turbo run build --filter=@21st/web && cd apps/web`
+10. Leave Output Directory as: `.next`
+11. Leave Install Command empty (or set to `pnpm install`)
 12. Click **Save**
 13. Go to **Deployments** → **Redeploy**
+
+**Why the `&& cd apps/web` at the end?**
+After building from the root, we need to return to `apps/web` so Vercel can find the `.next` output directory.
 
 ### Error: "supabaseKey is required"
 
@@ -200,11 +201,13 @@ apps/web ✓ Include source files outside of the Root Directory in the Build Ste
 
 **Build & Development Settings:**
 ```
-Build Command:        cd ../.. && turbo run build --filter=@21st/web
+Build Command:        cd ../.. && turbo run build --filter=@21st/web && cd apps/web
 Output Directory:     .next
-Install Command:      pnpm install
-Development Command:  pnpm run dev
+Install Command:      (leave empty or: pnpm install)
+Development Command:  (leave as default)
 ```
+
+The key is the `&& cd apps/web` at the end - this ensures Vercel looks for the `.next` output in the correct location.
 
 ## Need Help?
 
