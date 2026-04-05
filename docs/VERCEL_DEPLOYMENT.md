@@ -91,27 +91,27 @@ See `VERCEL_ENV_SETUP.md` for complete list and values.
 
 ### Error: "No Output Directory named 'public' found"
 
-This error occurs when Vercel doesn't recognize the monorepo structure.
+This happens when Root Directory is set. 
 
 **Solution:**
 1. Go to **Settings** → **General**
-2. Scroll to **Root Directory**
-3. Click **Edit**
-4. Set to: `apps/web`
-5. ✅ **CRITICAL**: Check "Include source files outside of the Root Directory in the Build Step"
-6. Click **Save**
-7. Go to **Settings** → **Build & Development Settings**
-8. Click **Override** on Build Command
-9. Set Build Command to: `cd ../.. && turbo run build --filter=@21st/web && cd apps/web`
-10. Leave Output Directory as: `.next`
-11. Leave Install Command empty (or set to `pnpm install`)
-12. Click **Save**
-13. Go to **Deployments** → **Redeploy**
+2. Find **Root Directory**
+3. Click **Edit** and **CLEAR IT** (leave empty)
+4. Click **Save**
+5. Make sure `vercel.json` exists at repository root with correct config
+6. Redeploy
 
-**Why the `&& cd apps/web` at the end?**
-After building from the root, we need to return to `apps/web` so Vercel can find the `.next` output directory.
+### Error: 404 NOT_FOUND after deployment
 
-### Error: "supabaseKey is required"
+This happens when Vercel can't find the built app.
+
+**Solution:**
+1. Verify `vercel.json` at repository root has:
+   - `"outputDirectory": "apps/web/.next"`
+   - `"buildCommand": "turbo run build --filter=@21st/web"`
+2. Go to **Settings** → **General** → **Root Directory** → Make sure it's **EMPTY**
+3. Go to **Settings** → **Build & Development Settings** → Make sure nothing is overridden (all empty)
+4. Redeploy
 
 **Solution**: This has been fixed with lazy initialization. Make sure all environment variables are set in Vercel.
 
@@ -120,18 +120,18 @@ After building from the root, we need to return to `apps/web` so Vercel can find
 3. Make sure it's enabled for all environments (Production, Preview, Development)
 4. Redeploy
 
-### Error: "Failed to collect page data"
+### Error: "supabaseKey is required"
 
 **Solution**: This has been fixed by adding `export const dynamic = 'force-dynamic'` to dynamic pages.
 
-### Build Timeout
+### Error: "Failed to collect page data"
 
 If the build times out:
 1. Check if all dependencies are properly cached
 2. Verify `pnpm-lock.yaml` is committed to git
 3. Consider upgrading to Vercel Pro for longer build times (10 minutes vs 5 minutes)
 
-### Build Command Not Found
+### Build Timeout
 
 If you see "turbo: command not found":
 
@@ -140,13 +140,15 @@ If you see "turbo: command not found":
 cd ../.. && pnpm run build --filter=@21st/web
 ```
 
-## Vercel Configuration Files
+## Vercel Configuration
 
-### Root `vercel.json`
-Contains cron job configuration (requires Vercel Pro tier).
+All configuration is in the root `vercel.json`:
+- Build command: Uses Turbo to build the web app and its dependencies
+- Output directory: Points to `apps/web/.next`
+- Install command: Uses pnpm
+- Cron jobs: Configured (requires Vercel Pro tier)
 
-### No `apps/web/vercel.json`
-We intentionally don't use a `vercel.json` in `apps/web` because Vercel dashboard settings are more reliable for monorepos.
+**DO NOT** set Root Directory in Vercel dashboard - it breaks monorepo builds.
 
 ## Cron Jobs
 
@@ -196,18 +198,18 @@ Your Vercel settings should look like this:
 
 **Root Directory:**
 ```
-apps/web ✓ Include source files outside of the Root Directory in the Build Step
+(empty - not set)
 ```
 
 **Build & Development Settings:**
 ```
-Build Command:        cd ../.. && turbo run build --filter=@21st/web && cd apps/web
-Output Directory:     .next
-Install Command:      (leave empty or: pnpm install)
-Development Command:  (leave as default)
+Build Command:        (empty - uses vercel.json)
+Output Directory:     (empty - uses vercel.json)
+Install Command:      (empty - uses vercel.json)
+Development Command:  (empty - uses default)
 ```
 
-The key is the `&& cd apps/web` at the end - this ensures Vercel looks for the `.next` output in the correct location.
+All configuration comes from `vercel.json` at the repository root.
 
 ## Need Help?
 
