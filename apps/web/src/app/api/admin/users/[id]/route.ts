@@ -5,6 +5,9 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { auth } from "@clerk/nextjs/server";
 import { isLegacyAdmin } from "@/lib/api/clerkAdmin";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const UpdateUserSchema = z.object({
   role: z.enum(["user", "admin"]).optional(),
   banned: z.boolean().optional(),

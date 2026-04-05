@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { auth } from "@clerk/nextjs/server";
 import { isLegacyAdmin } from "@/lib/api/clerkAdmin";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // ═══════════════════════════════════════════════════
 // ADMIN ENTRY BY ID — /api/admin/entries/[id]
 // GET, PATCH, DELETE for a single design entry

@@ -1,0 +1,54 @@
+name: Scheduled Cron Jobs
+
+on:
+  schedule:
+    # Recompute counts - Daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  
+  # Allow manual trigger for testing
+  workflow_dispatch:
+
+jobs:
+  recompute-counts:
+    name: Recompute Component Counts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Recompute Counts
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/recompute-counts" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f || echo "Failed to trigger recompute-counts"
+
+  purge-deleted-files:
+    name: Purge Deleted Files
+    runs-on: ubuntu-latest
+    needs: recompute-counts
+    steps:
+      - name: Trigger Purge Deleted Files
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/purge-deleted-files" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f || echo "Failed to trigger purge-deleted-files"
+
+  update-embeddings:
+    name: Update Embeddings
+    runs-on: ubuntu-latest
+    needs: purge-deleted-files
+    steps:
+      - name: Trigger Update Embeddings
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/update-embeddings" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f || echo "Failed to trigger update-embeddings"
+
+  reset-monthly-counts:
+    name: Reset Monthly Counts (1st of month)
+    runs-on: ubuntu-latest
+    # Only run on the 1st of each month
+    if: github.event.schedule == '0 0 1 * *' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Trigger Reset Monthly Counts
+        run: |
+          curl -X GET "${{ secrets.APP_URL }}/api/cron/reset-monthly-counts" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            -f || echo "Failed to trigger reset-monthly-counts"

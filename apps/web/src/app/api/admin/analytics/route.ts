@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/api/adminAuth";
 import { Permission } from "@/lib/rbac";
 
+// Force dynamic rendering - admin routes should not be statically generated
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/analytics — Installs, signups, top components (30d)
 export async function GET(req: NextRequest) {
   const authResult = await requirePermission(req, Permission.VIEW_ANALYTICS);

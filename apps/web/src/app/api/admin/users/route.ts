@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { requirePermission } from "@/lib/api/adminAuth";
 import { Permission } from "@/lib/rbac";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/users — Paginated user list with component counts
 export async function GET(req: NextRequest) {
   const authResult = await requirePermission(req, Permission.VIEW_USERS);

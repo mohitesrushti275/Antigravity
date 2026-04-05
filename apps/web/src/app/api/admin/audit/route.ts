@@ -1,6 +1,9 @@
 import { NextRequest } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 // GET /api/admin/audit — Filtered audit log
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

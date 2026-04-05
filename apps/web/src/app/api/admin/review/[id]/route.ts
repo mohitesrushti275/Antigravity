@@ -9,6 +9,9 @@ import { ReviewSchema } from '@21st/types';
 import { requirePermission } from '@/lib/api/adminAuth';
 import { Permission } from '@/lib/rbac';
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 type RouteParams = { params: Promise<{ id: string }> };
 
 // ═══════════════════════════════════════════════════

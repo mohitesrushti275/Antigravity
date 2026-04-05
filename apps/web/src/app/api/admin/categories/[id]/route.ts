@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase/admin";
 import { z } from "zod";
 import { cache } from "@/lib/cache";
 
+// Force dynamic rendering
+export const dynamic = 'force-dynamic';
+
 const UpdateCategorySchema = z.object({
   slug: z.string().min(1).max(50).optional(),
   name: z.string().min(1).max(100).optional(),
