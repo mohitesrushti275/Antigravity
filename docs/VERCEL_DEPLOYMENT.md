@@ -28,8 +28,9 @@ Click **Override** and set:
 
 **Build Command:**
 ```bash
-cd ../.. && pnpm turbo run build --filter=@21st/web
+cd ../.. && turbo run build --filter=@21st/web
 ```
+(This runs from repo root to ensure workspace dependencies are built)
 
 **Output Directory:**
 ```
@@ -103,7 +104,7 @@ This error occurs when Vercel doesn't recognize the monorepo structure.
 6. Click **Save**
 7. Go to **Settings** → **Build & Development Settings**
 8. Click **Override** on Build Command
-9. Set Build Command to: `cd ../.. && pnpm turbo run build --filter=@21st/web`
+9. Set Build Command to: `cd ../.. && turbo run build --filter=@21st/web`
 10. Set Output Directory to: `.next`
 11. Set Install Command to: `pnpm install`
 12. Click **Save**
@@ -199,7 +200,7 @@ apps/web ✓ Include source files outside of the Root Directory in the Build Ste
 
 **Build & Development Settings:**
 ```
-Build Command:        cd ../.. && pnpm turbo run build --filter=@21st/web
+Build Command:        cd ../.. && turbo run build --filter=@21st/web
 Output Directory:     .next
 Install Command:      pnpm install
 Development Command:  pnpm run dev
