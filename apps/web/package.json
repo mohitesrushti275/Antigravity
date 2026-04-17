@@ -23,7 +23,7 @@
     "@aws-sdk/s3-request-presigner": "^3.750.0",
     "@anthropic-ai/sdk": "^0.39.0",
     "@sentry/nextjs": "^9.5.0",
-    "resend": "^4.2.0",
+    "resend": "^6.10.0",
     "svix": "^1.45.0",
     "clsx": "^2.1.1",
     "framer-motion": "^12.38.0",
